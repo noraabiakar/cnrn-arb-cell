@@ -9,15 +9,15 @@
             "region": "apic",
             "cm": 2,
             "ions": {
-                {"na": {"reversal-potential":  50}},
-                {"k":  {"reversal-potential": -85}}
+                "na": {"reversal-potential":  50},
+                "k":  {"reversal-potential": -85}
             }
         },
         {
             "region": "axon",
             "ions": {
-                {"na": {"reversal-potential":  50}},
-                {"k":  {"reversal-potential": -85}}
+                "na": {"reversal-potential":  50},
+                "k":  {"reversal-potential": -85}
             }
         },
         {
@@ -27,8 +27,8 @@
         {
             "region": "soma",
             "ions": {
-                {"na": {"reversal-potential":  50}},
-                {"k":  {"reversal-potential": -85}}
+                "na": {"reversal-potential":  50},
+                "k":  {"reversal-potential": -85}
             }
         }
     ],
