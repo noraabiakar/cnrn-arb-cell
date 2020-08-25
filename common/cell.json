@@ -2,48 +2,34 @@
     "global": {
         "celcius": 34,
         "cm": 1,
-        "Ra": 100,
-        "ions": {
-            "ca": {
-                "internal-concentration": null,
-                "external-concentration": null,
-                "reversal-potential": null,
-                "method": "constant"
-            },
-            "k": {
-                "internal-concentration": null,
-                "external-concentration": null,
-                "reversal-potential": null,
-                "method": "constant"
-            },
-            "na": {
-                "internal-concentration": null,
-                "external-concentration": null,
-                "reversal-potential": null,
-                "method": "constant"
-            }
-        }
+        "Ra": 100
     },
     "local": {
-        "region": "apic":
-        "parameters": {
+        {
+            "region": "apic",
             "cm": 2,
-            "ions": {"na": {"reversal-potential": 50},
-                    {"k": {"reversal-potential": -85}}
+            "ions": {
+                {"na": {"reversal-potential":  50}},
+                {"k":  {"reversal-potential": -85}}
+            }
         },
-        "region": "axon",
-        "parameters": {
-            "ions": {"na": {"reversal-potential": 50},
-                    {"k": {"reversal-potential": -85}}
+        {
+            "region": "axon",
+            "ions": {
+                {"na": {"reversal-potential":  50}},
+                {"k":  {"reversal-potential": -85}}
+            }
         },
-        "region": "dend",
-        "parameters": {
+        {
+            "region": "dend",
             "cm": 2
         },
-        "region": "soma",
-        "parameters": {
-            "ions": {"na": {"reversal-potential": 50},
-                    {"k": {"reversal-potential": -85}}
+        {
+            "region": "soma",
+            "ions": {
+                {"na": {"reversal-potential":  50}},
+                {"k":  {"reversal-potential": -85}}
+            }
         }
     },
     "mechanisms": [

@@ -15,12 +15,14 @@ ions
             140.0
     na::reversal-potential [mV]
             115 - 65 = 50
+
     k::internal-concentration [mM]
             54.4
     k::external-concentration [mM]
             2.5
     k::reversal-potential [mV]
             -12 - 65 = -77
+
     ca::internal-concentration [mM]
             5e-5
     ca::external-concentration [mM]
