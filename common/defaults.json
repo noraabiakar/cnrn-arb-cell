@@ -2,6 +2,7 @@
     "celsius": 6.3,
     "cm": 0.01,
     "Ra": 35.4,
+    "Vm": -60,
     "ions": {
         "ca": {
             "internal-concentration": 5e-5,
