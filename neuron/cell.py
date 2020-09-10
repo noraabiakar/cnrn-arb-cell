@@ -1,5 +1,3 @@
-# Test multiple synaptic activation of cell models
-
 from neuron import h
 import numpy as np
 import time as cookie
@@ -113,35 +111,6 @@ region_map = {"soma": c.soma,
               "apic": c.apic, 
               "all" : c.all}
 
-# Set region properties
-for region in region_map: 
-  for sec in region_map[region]:
-    sec.cm = local_param_dict[region]["cm"]
-    sec.Ra = local_param_dict[region]["Ra"]
-    for ion in local_ion_dict[region]:
-      iconc = ion+"i"
-      econc = ion+"o"
-      revpot = "e"+ion
-      if hasattr(sec, iconc):
-        setattr(sec, iconc, local_ion_dict[region][ion]["iconc"])
-      if hasattr(sec, econc):
-        setattr(sec, econc, local_ion_dict[region][ion]["econc"])
-      if hasattr(sec, revpot):
-        setattr(sec, revpot, local_ion_dict[region][ion]["revpot"])
-
-# Set model properties after checking consistency
-global_vm = local_param_dict["all"]["Vm"]
-global_temp = local_param_dict["all"]["celsius"]
-
-for region in local_param_dict:
-  if local_param_dict[region]["Vm"] != global_vm: 
-     raise Exception("Neuron doesn't allow inconsistent initial membrane voltage across different regions of a cell")
-  if local_param_dict[region]["celsius"] != global_temp: 
-     raise Exception("Neuron doesn't allow inconsistent temperatures across different regions of a cell")
-
-h.v_init = global_vm
-h.celsius = global_vm
-
 # Paint region mechanisms
 for mech_desc in cells["mechanisms"]: 
   region = mech_desc["region"]
@@ -157,6 +126,41 @@ for mech_desc in cells["mechanisms"]:
     for p in translated_params: 
       setattr(sec, p, translated_params[p])
 
+region_map.pop("all")
+# Set region properties
+for region in region_map: 
+  for sec in region_map[region]:
+    sec.cm = local_param_dict[region]["cm"]
+    print(sec, "cm", sec.cm)
+    sec.Ra = local_param_dict[region]["Ra"]
+    print(sec, "Ra", sec.Ra)
+    for ion in local_ion_dict[region]:
+      iconc = ion+"i"
+      econc = ion+"o"
+      revpot = "e"+ion
+      if hasattr(sec, iconc):
+        setattr(sec, iconc, local_ion_dict[region][ion]["iconc"])
+        print(sec, ion, "iconc", getattr(sec, iconc))
+      if hasattr(sec, econc):
+        setattr(sec, econc, local_ion_dict[region][ion]["econc"])
+        print(sec, ion, "econc", getattr(sec, econc))
+      if hasattr(sec, revpot):
+        setattr(sec, revpot, local_ion_dict[region][ion]["revpot"])
+        print(sec, ion, "revpot", getattr(sec, revpot))
+  print()
+
+# Set model properties after checking consistency
+global_vm = local_param_dict["all"]["Vm"]
+global_temp = local_param_dict["all"]["celsius"]
+
+for region in local_param_dict:
+  if local_param_dict[region]["Vm"] != global_vm: 
+     raise Exception("Neuron doesn't allow inconsistent initial membrane voltage across different regions of a cell")
+  if local_param_dict[region]["celsius"] != global_temp: 
+     raise Exception("Neuron doesn't allow inconsistent temperatures across different regions of a cell")
+
+h.v_init = global_vm
+h.celsius = global_vm
 
 ################################
 # Setting up vectors to record #

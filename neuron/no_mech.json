@@ -1,0 +1,52 @@
+{
+  "global": {
+    "celsius": 34,
+    "cm": 0.01,
+    "Ra": 100
+  },
+  "local": [
+    {
+      "region": "apic",
+      "cm": 0.02,
+      "ions": {
+        "na": {"reversal-potential":  50},
+        "k":  {"reversal-potential": -85}
+      }
+    },
+    {
+      "region": "axon",
+      "ions": {
+        "na": {"reversal-potential":  50},
+        "k":  {"reversal-potential": -85}
+      }
+    },
+    {
+      "region": "dend",
+      "cm": 0.02
+    },
+    {
+      "region": "soma",
+      "ions": {
+        "na": {"reversal-potential":  50},
+        "k":  {"reversal-potential": -85}
+      }
+    }
+  ],
+  "mechanisms": [
+    {
+      "region": "all",
+      "mechanism": "pas",
+      "parameters": {"e": -75, "g": 3e-5}
+    },
+    {
+      "region": "soma",
+      "mechanism": "CaDynamics_E2",
+      "parameters": {"gamma": 0.000609, "decay": 210.485284}
+    },
+    {
+      "region": "soma",
+      "mechanism": "SKv3_1",
+      "parameters": {"gSKv3_1bar": 0.303472}
+    }
+  ]
+}
