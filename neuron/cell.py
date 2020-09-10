@@ -18,8 +18,8 @@ with open(sys.argv[1]) as json_file:
 with open(sys.argv[2]) as json_file:
     cells = json.load(json_file)
 
+# Class to create cell from swc
 swc = sys.argv[3]
-
 class cell():
   def __init__(self, fname):
     self.fname = fname
@@ -32,17 +32,22 @@ class cell():
   def __str__(self):
     return 'Cell'
 
+# Read json files and generate local params
+
+# Default parameter dictionary
 param_dict = {"celsius": defaults["celsius"],
               "Vm"     : defaults["Vm"],
               "Ra"     : defaults["Ra"],
               "cm"     : defaults["cm"]*100}
 
+# Default ion_dictionary
 ion_dict = {}
 for ion in {"ca", "na", "k"}:
   ion_dict[ion] = {"iconc"  : defaults["ions"][ion]["internal-concentration"],
                    "econc"  : defaults["ions"][ion]["external-concentration"],
                    "revpot" : defaults["ions"][ion]["reversal-potential"]}
 
+# Override defaults 
 if "celsius" in  cells["global"]: 
   param_dict["celsius"] = cells["global"]["celsius"]
 
@@ -65,16 +70,21 @@ if "ions" in cells["global"]:
        if "reversal-potential" in cells["global"]["ions"][ion]:
          ion_dict[ion]["revpot"] = cells["global"]["ions"][ion]["reversal-potential"]
 
+# Local param dictionary, intialized with the defaults
 local_param_dict = {"soma": copy.deepcopy(param_dict), 
                     "dend": copy.deepcopy(param_dict), 
                     "axon": copy.deepcopy(param_dict), 
-                    "apic": copy.deepcopy(param_dict)} 
+                    "apic": copy.deepcopy(param_dict), 
+                    "all" : copy.deepcopy(param_dict)} 
 
+# Local ion dictionary, intialized with the defaults 
 local_ion_dict   = {"soma": copy.deepcopy(ion_dict), 
                     "dend": copy.deepcopy(ion_dict), 
                     "axon": copy.deepcopy(ion_dict), 
-                    "apic": copy.deepcopy(ion_dict)} 
+                    "apic": copy.deepcopy(ion_dict), 
+                    "all" : copy.deepcopy(ion_dict)} 
 
+# Override locals
 for local_dict in cells["local"]:
   region = local_dict["region"]
   if "celsius" in local_dict:
@@ -95,62 +105,64 @@ for local_dict in cells["local"]:
          if "reversal-potential" in local_dict["ions"][ion]:
            local_ion_dict[region][ion]["revpot"] = local_dict["ions"][ion]["reversal-potential"]
 
+# Creat cell and rehion map
 c = cell(swc)
-print(c.soma)
-print(c.dend)
-print(c.apic)
-print(c.axon)
+region_map = {"soma": c.soma, 
+              "dend": c.dend,
+              "axon": c.axon,
+              "apic": c.apic, 
+              "all" : c.all}
 
-#Create ball and stick model
-soma      = h.Section(name='soma')
-soma.L    = 11.65968
-soma.diam = 11.65968
-soma.nseg = 1
+# Set region properties
+for region in region_map: 
+  for sec in region_map[region]:
+    sec.cm = local_param_dict[region]["cm"]
+    sec.Ra = local_param_dict[region]["Ra"]
+    for ion in local_ion_dict[region]:
+      iconc = ion+"i"
+      econc = ion+"o"
+      revpot = "e"+ion
+      if hasattr(sec, iconc):
+        setattr(sec, iconc, local_ion_dict[region][ion]["iconc"])
+      if hasattr(sec, econc):
+        setattr(sec, econc, local_ion_dict[region][ion]["econc"])
+      if hasattr(sec, revpot):
+        setattr(sec, revpot, local_ion_dict[region][ion]["revpot"])
 
-soma.Ra = 100
-soma.cm = 1
+# Set model properties after checking consistency
+global_vm = local_param_dict["all"]["Vm"]
+global_temp = local_param_dict["all"]["celsius"]
 
-dend      = h.Section(name='dend')
-dend.L    = 200.0
-dend.diam = 30
-dend.nseg = 20
+for region in local_param_dict:
+  if local_param_dict[region]["Vm"] != global_vm: 
+     raise Exception("Neuron doesn't allow inconsistent initial membrane voltage across different regions of a cell")
+  if local_param_dict[region]["celsius"] != global_temp: 
+     raise Exception("Neuron doesn't allow inconsistent temperatures across different regions of a cell")
 
-dend.Ra = 100
-dend.cm = 1
+h.v_init = global_vm
+h.celsius = global_vm
 
-dend.connect(soma(1))
+# Paint region mechanisms
+for mech_desc in cells["mechanisms"]: 
+  region = mech_desc["region"]
+  mech   = mech_desc["mechanism"]
+  params = mech_desc["parameters"]
 
-# Paint regions
+  translated_params = {}
+  for p in params: 
+    translated_params[p + "_" + mech] = params[p]
+    
+  for sec in region_map[region]:
+    sec.insert(mech) 
+    for p in translated_params: 
+      setattr(sec, p, translated_params[p])
 
-if in_param["soma_hh"] :
-    soma.insert("hh")
-    soma.ena = in_param["hh_ena"]
-    soma.ek = in_param["hh_ek"]
-    soma.gnabar_hh = in_param["hh_gnabar"]
-    soma.gkbar_hh = in_param["hh_gkbar"]
-    soma.gl_hh = in_param["hh_gl"]
-else :
-    soma.insert("pas")
-    soma.e_pas = in_param["pas_e"]
-    soma.g_pas = in_param["pas_g"]
-
-if in_param["dend_hh"] :
-    dend.insert("hh")
-    dend.ena = in_param["hh_ena"]
-    dend.ek = in_param["hh_ek"]
-    dend.gnabar_hh = in_param["hh_gnabar"]
-    dend.gkbar_hh = in_param["hh_gkbar"]
-    dend.gl_hh = in_param["hh_gl"]
-else :
-    dend.insert("pas")
-    dend.e_pas = in_param["pas_e"]
-    dend.g_pas = in_param["pas_g"]
 
 ################################
 # Setting up vectors to record #
 ################################
 v = h.Vector()
-v.record(soma(0.5)._ref_v)
+v.record(c.soma[0](0.5)._ref_v)
 
 t = h.Vector()
 t.record(h._ref_t)
@@ -160,12 +172,9 @@ t.record(h._ref_t)
 #########################
 h.secondorder = 0
 
-h.v_init = in_param["vinit"]
-h.celsius = in_param["temp"]
-
 h.t = 0
-h.tstop = 200
-h.dt = in_param["dt_neuron"]
+h.tstop = 20
+h.dt = 0.025 
 
 h.steps_per_ms = 1/h.dt
 
@@ -180,6 +189,21 @@ ST = cookie.time()
 h.run()
 ET = cookie.time()-ST
 print("Finished in %f seconds" % ET)
+
+fig, ax = plt.subplots()
+ax.plot(t, v)
+
+ax.set(xlabel='time (ms)', ylabel='voltage (mV)', title='swc morphology demo')
+plt.xlim(0,h.tstop)
+# plt.ylim(-80,80)
+ax.grid()
+
+plot_to_file=False
+if plot_to_file:
+    fig.savefig("voltages.png", dpi=300)
+else:
+    plt.show()
+
 
 ########
 # Plot #
