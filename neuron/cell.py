@@ -105,11 +105,16 @@ for local_dict in cells["local"]:
 
 # Creat cell and rehion map
 c = cell(swc)
-region_map = {"soma": c.soma, 
-              "dend": c.dend,
-              "axon": c.axon,
-              "apic": c.apic, 
-              "all" : c.all}
+region_map = {"all" : c.all}
+
+if (hasattr(c, "soma")): 
+  region_map["soma"] = c.soma
+if (hasattr(c, "dend")): 
+  region_map["dend"] = c.dend
+if (hasattr(c, "apic")): 
+  region_map["apic"] = c.apic
+if (hasattr(c, "axon")): 
+  region_map["axon"] = c.axon
 
 # Paint region mechanisms
 for mech_desc in cells["mechanisms"]: 
@@ -126,8 +131,8 @@ for mech_desc in cells["mechanisms"]:
     for p in translated_params: 
       setattr(sec, p, translated_params[p])
 
-region_map.pop("all")
 # Set region properties
+region_map.pop("all")
 for region in region_map: 
   for sec in region_map[region]:
     sec.cm = local_param_dict[region]["cm"]
@@ -149,6 +154,12 @@ for region in region_map:
         print(sec, ion, "revpot", getattr(sec, revpot))
   print()
 
+# Set nseg
+for sec in c.all: 
+  n = int(sec.L//0.5)
+  print(n)
+  sec.nseg = n
+
 # Set model properties after checking consistency
 global_vm = local_param_dict["all"]["Vm"]
 global_temp = local_param_dict["all"]["celsius"]
@@ -161,6 +172,12 @@ for region in local_param_dict:
 
 h.v_init = global_vm
 h.celsius = global_vm
+
+# Setup stims
+stim = h.IClamp(0.5, c.soma[0])
+stim.delay = 0
+stim.dur = 3 
+stim.amp = 3.5
 
 ################################
 # Setting up vectors to record #

@@ -31,11 +31,11 @@ cell.overwrite_default_parameters(globals)
 cell.overwrite_local_parameters(locals)
 cell.write_dynamics(region_mechs)
 
-#cell.place('mid_soma', arbor.iclamp(0, 3, current=3.5))
+cell.place('mid_soma', arbor.iclamp(0, 3, current=3.5))
 cell.place('root', arbor.spike_detector(-10))
 
 # Have one compartment between each sample point.
-cell.compartments_on_segments()
+cell.compartments_length(0.5)
 
 # Make single cell model.
 m = arbor.single_cell_model(cell)

@@ -32,21 +32,5 @@
       }
     }
   ],
-  "mechanisms": [
-    {
-      "region": "all",
-      "mechanism": "pas",
-      "parameters": {"e": -75, "g": 3e-5}
-    },
-    {
-      "region": "soma",
-      "mechanism": "CaDynamics_E2",
-      "parameters": {"gamma": 0.000609, "decay": 210.485284}
-    },
-    {
-      "region": "soma",
-      "mechanism": "SKv3_1",
-      "parameters": {"gSKv3_1bar": 0.303472}
-    }
-  ]
+  "mechanisms": []
 }
