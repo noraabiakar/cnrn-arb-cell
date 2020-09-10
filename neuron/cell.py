@@ -9,13 +9,28 @@ import json
 import sys
 import copy
 
+h.load_file("stdrun.hoc")
+h.load_file('import3d.hoc')
+
 with open(sys.argv[1]) as json_file:
     defaults = json.load(json_file)
 
 with open(sys.argv[2]) as json_file:
     cells = json.load(json_file)
 
-h.load_file("stdrun.hoc")
+swc = sys.argv[3]
+
+class cell():
+  def __init__(self, fname):
+    self.fname = fname
+    self.load_morphology()
+  def load_morphology(self):
+    cell = h.Import3d_SWC_read()
+    cell.input(self.fname)
+    i3d = h.Import3d_GUI(cell, 0)
+    i3d.instantiate(self)
+  def __str__(self):
+    return 'Cell'
 
 param_dict = {"celsius": defaults["celsius"],
               "Vm"     : defaults["Vm"],
@@ -79,6 +94,12 @@ for local_dict in cells["local"]:
            local_ion_dict[region][ion]["econc"] = local_dict["ions"][ion]["external-concentration"]
          if "reversal-potential" in local_dict["ions"][ion]:
            local_ion_dict[region][ion]["revpot"] = local_dict["ions"][ion]["reversal-potential"]
+
+c = cell(swc)
+print(c.soma)
+print(c.dend)
+print(c.apic)
+print(c.axon)
 
 #Create ball and stick model
 soma      = h.Section(name='soma')
