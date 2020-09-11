@@ -4,7 +4,7 @@ For the time being arbor needs to be installed from this branch `https://github.
 
 ```
 # Clone.
-git clone -b read_json https://github.com/arbor-sim/arbor.git --recurse-submodules
+git clone -b read_json https://github.com/noraabiakar/arbor.git --recurse-submodules
 cd arbor
 
 # Make a path for building.
@@ -20,7 +20,7 @@ make -j 4 install
 
 ## Running the examples
 
-#Arbor
+###Arbor
 ```
 # Point python to the Arbor installation.
 export PYTHONPATH=/path/to/arbor/install/lib/python3.6/site-packages/
@@ -32,7 +32,7 @@ cd arbor
 python cell.py ../examples/ex1/defaults.json ../examples/ex1/cells.json ../examples/ex1/morphologies/sample_cell_arb.swc 
 ```
 
-#Neuron
+###Neuron
 ```
 # Point python to the Arbor installation.
 export PYTHONPATH=/path/to/neuron/install/lib/python3.6/site-packages/
