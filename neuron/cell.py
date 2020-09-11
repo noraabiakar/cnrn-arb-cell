@@ -45,6 +45,11 @@ for ion in {"ca", "na", "k"}:
                    "econc"  : defaults["ions"][ion]["external-concentration"],
                    "revpot" : defaults["ions"][ion]["reversal-potential"]}
 
+# Ion revpot methods
+method_dict = {"ca" : defaults["ions"]["ca"]["method"],
+               "na" : defaults["ions"]["na"]["method"],
+               "k"  : defaults["ions"]["k"]["method"]}
+
 # Override defaults 
 if "celsius" in  cells["global"]: 
   param_dict["celsius"] = cells["global"]["celsius"]
@@ -67,6 +72,8 @@ if "ions" in cells["global"]:
          ion_dict[ion]["econc"] = cells["global"]["ions"][ion]["external-concentration"]
        if "reversal-potential" in cells["global"]["ions"][ion]:
          ion_dict[ion]["revpot"] = cells["global"]["ions"][ion]["reversal-potential"]
+       if "method" in cells["global"]["ions"][ion]:
+         method_dict[ion] = cells["global"]["ions"][ion]["method"]
 
 # Local param dictionary, intialized with the defaults
 local_param_dict = {"soma": copy.deepcopy(param_dict), 
@@ -153,6 +160,16 @@ for region in region_map:
         setattr(sec, revpot, local_ion_dict[region][ion]["revpot"])
         print(sec, ion, "revpot", getattr(sec, revpot))
   print()
+
+# Set ion methods 
+for ion in method_dict:
+  ion_name = ion + "_ion"
+  if method_dict[ion] == "nernst":
+    h.ion_style(ion_name, 3, 2, 1, 1, 1)
+  elif method_dict[ion] == "constant":
+    h.ion_style(ion_name, 3, 2, 0, 0, 1)
+  else: 
+     raise Exception("Only allowed ion methods are \"nernst\" and \"constant\"")
 
 # Set nseg
 for sec in c.all: 
