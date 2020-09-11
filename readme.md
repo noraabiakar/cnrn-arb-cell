@@ -1,6 +1,6 @@
 ## Downloading and Compiling Arbor
 (For help refer to https://arbor.readthedocs.io/en/latest/install.html)
-For the time being arbor needs to be installed from this branch `https://github.com/arbor-sim/arbor/tree/read_json`
+For the time being arbor needs to be installed from this branch `https://github.com/noraabiakar/arbor/tree/read_json`
 
 ```
 # Clone.
@@ -20,7 +20,7 @@ make -j 4 install
 
 ## Running the examples
 
-###Arbor
+### Arbor
 ```
 # Point python to the Arbor installation.
 export PYTHONPATH=/path/to/arbor/install/lib/python3.6/site-packages/
@@ -32,7 +32,7 @@ cd arbor
 python cell.py ../examples/ex1/defaults.json ../examples/ex1/cells.json ../examples/ex1/morphologies/sample_cell_arb.swc 
 ```
 
-###Neuron
+### Neuron
 ```
 # Point python to the Arbor installation.
 export PYTHONPATH=/path/to/neuron/install/lib/python3.6/site-packages/
