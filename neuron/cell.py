@@ -6,6 +6,7 @@ import pickle
 import json
 import sys
 import copy
+import json_reader as loader
 
 h.load_file("stdrun.hoc")
 h.load_file('import3d.hoc')
@@ -15,6 +16,9 @@ with open(sys.argv[1]) as json_file:
 
 with open(sys.argv[2]) as json_file:
     cells = json.load(json_file)
+
+default_file = sys.argv[1]
+cell_file    = sys.argv[2]
 
 # Class to create cell from swc
 swc = sys.argv[3]
@@ -30,90 +34,11 @@ class cell():
   def __str__(self):
     return 'Cell'
 
-# Read json files and generate local params
-
-# Default parameter dictionary
-param_dict = {"celsius": defaults["celsius"],
-              "Vm"     : defaults["Vm"],
-              "Ra"     : defaults["Ra"],
-              "cm"     : defaults["cm"]*100}
-
-# Default ion_dictionary
-ion_dict = {}
-for ion in {"ca", "na", "k"}:
-  ion_dict[ion] = {"iconc"  : defaults["ions"][ion]["internal-concentration"],
-                   "econc"  : defaults["ions"][ion]["external-concentration"],
-                   "revpot" : defaults["ions"][ion]["reversal-potential"]}
-
-# Ion revpot methods
-method_dict = {"ca" : defaults["ions"]["ca"]["method"],
-               "na" : defaults["ions"]["na"]["method"],
-               "k"  : defaults["ions"]["k"]["method"]}
-
-# Override defaults 
-if "celsius" in  cells["global"]: 
-  param_dict["celsius"] = cells["global"]["celsius"]
-
-if "Vm" in cells["global"]:
-  param_dict["Vm"] = cells["global"]["Vm"]
-
-if "Ra" in cells["global"]:
-  param_dict["Ra"] = cells["global"]["Ra"]
-
-if "cm" in cells["global"]:
-  param_dict["cm"] = cells["global"]["cm"]*100
-
-if "ions" in cells["global"]:
-   for ion in {"ca", "na", "k"}:
-     if ion in cells["global"]["ions"]:
-       if "internal-concentration" in cells["global"]["ions"][ion]:
-         ion_dict[ion]["iconc"] = cells["global"]["ions"][ion]["internal-concentration"]
-       if "external-concentration" in cells["global"]["ions"][ion]:
-         ion_dict[ion]["econc"] = cells["global"]["ions"][ion]["external-concentration"]
-       if "reversal-potential" in cells["global"]["ions"][ion]:
-         ion_dict[ion]["revpot"] = cells["global"]["ions"][ion]["reversal-potential"]
-       if "method" in cells["global"]["ions"][ion]:
-         method_dict[ion] = cells["global"]["ions"][ion]["method"]
-
-# Local param dictionary, intialized with the defaults
-local_param_dict = {"soma": copy.deepcopy(param_dict), 
-                    "dend": copy.deepcopy(param_dict), 
-                    "axon": copy.deepcopy(param_dict), 
-                    "apic": copy.deepcopy(param_dict), 
-                    "all" : copy.deepcopy(param_dict)} 
-
-# Local ion dictionary, intialized with the defaults 
-local_ion_dict   = {"soma": copy.deepcopy(ion_dict), 
-                    "dend": copy.deepcopy(ion_dict), 
-                    "axon": copy.deepcopy(ion_dict), 
-                    "apic": copy.deepcopy(ion_dict), 
-                    "all" : copy.deepcopy(ion_dict)} 
-
-# Override locals
-for local_dict in cells["local"]:
-  region = local_dict["region"]
-  if "celsius" in local_dict:
-    local_param_dict[region]["celsius"] = local_dict["celsius"]
-  if "Vm" in local_dict: 
-    local_param_dict[region]["Vm"]      = local_dict["Vm"]
-  if "Ra" in local_dict:
-    local_param_dict[region]["Ra"]      = local_dict["Ra"]
-  if "cm" in local_dict:
-    local_param_dict[region]["cm"]      = local_dict["cm"]*100
-  if "ions" in local_dict: 
-     for ion in {"ca", "na", "k"}:
-       if ion in local_dict["ions"]:
-         if "internal-concentration" in local_dict["ions"][ion]:
-           local_ion_dict[region][ion]["iconc"] = local_dict["ions"][ion]["internal-concentration"]
-         if "external-concentration" in local_dict["ions"][ion]:
-           local_ion_dict[region][ion]["econc"] = local_dict["ions"][ion]["external-concentration"]
-         if "reversal-potential" in local_dict["ions"][ion]:
-           local_ion_dict[region][ion]["revpot"] = local_dict["ions"][ion]["reversal-potential"]
-
-# Creat cell and rehion map
+# Creat cell and region map
 c = cell(swc)
-region_map = {"all" : c.all}
 
+# Create region map
+region_map = {"all" : c.all}
 if (hasattr(c, "soma")): 
   region_map["soma"] = c.soma
 if (hasattr(c, "dend")): 
@@ -123,8 +48,14 @@ if (hasattr(c, "apic")):
 if (hasattr(c, "axon")): 
   region_map["axon"] = c.axon
 
+# load parameters
+local_param_dict = loader.load_param_dict(default_file, cell_file)
+local_ion_dict   = loader.load_ion_dict(default_file, cell_file)
+method_dict      = loader.load_method_dict(default_file, cell_file)
+mechanism_dict   = loader.load_mechanism_dict(cell_file)
+
 # Paint region mechanisms
-for mech_desc in cells["mechanisms"]: 
+for mech_desc in mechanism_dict: 
   region = mech_desc["region"]
   mech   = mech_desc["mechanism"]
   params = mech_desc["parameters"]
@@ -242,41 +173,3 @@ if plot_to_file:
 else:
     plt.show()
 
-
-########
-# Plot #
-########
-output = open("voltages.json", "w")
-output.write("{\n")
-output.write("  \"cell\":\"ball and stick - neuron\",\n")
-output.write("  \"data\": {\n")
-output.write("    \"time\": [\n")
-
-for i in range(len(t)-1):
-    output.write("      ")
-    output.write(str(t[i]))
-    output.write(",\n")
-
-output.write("      ")
-output.write(str(t[-1]))
-output.write("\n")
-
-output.write("    ],\n")
-output.write("    \"voltage\": [\n")
-
-for i in range(len(v)-1):
-    output.write("      ")
-    output.write(str(v[i]))
-    output.write(",\n")
-
-output.write("      ")
-output.write(str(v[-1]))
-output.write("\n")
-
-output.write("    ]\n")
-output.write("  },\n")
-output.write("  \"name\": \"neuron demo\",\n")
-output.write("  \"units\": \"mv\"\n")
-output.write("}\n")
-
-output.close()

@@ -26,26 +26,36 @@ labels = arbor.label_dict(defs)
 # Combine morphology with region and locset definitions to make a cable cell.
 cell = arbor.cable_cell(tree, labels)
 
+# Apply the default cell parameters.
 cell.apply_default_parameters(defaults)
+
+# Overwrite the default global cell parameters.
 cell.overwrite_default_parameters(globals)
+
+# Overwrite the default local cell parameters.
 cell.overwrite_local_parameters(locals)
+
+# Paint density mechanisms on the regions of the cell.
 cell.write_dynamics(region_mechs)
 
+# Place current clamp and spike detector.
 cell.place('mid_soma', arbor.iclamp(0, 3, current=3.5))
 cell.place('root', arbor.spike_detector(-10))
 
-# Have one compartment between each sample point.
+# Select a fine discritization for apt comparison with neuron.
 cell.compartments_length(0.5)
 
 # Make single cell model.
 m = arbor.single_cell_model(cell)
+
+# Extend the default catalogue
 m.properties.catalogue.extend(arbor.bbp_catalogue(), "")
 
 # Attach voltage probes that sample at 50 kHz.
 m.probe('voltage', where='root',  frequency=50000)
 m.probe('voltage', where='mid_soma', frequency=50000)
 
-# Simulate the cell for 15 ms.
+# Simulate the cell for 20 ms.
 tfinal=20
 m.run(tfinal)
 
@@ -61,8 +71,6 @@ else:
 fig, ax = plt.subplots()
 for t in m.traces:
     ax.plot(t.time, t.value)
-    # for v in t.value:
-    #     print(v)
 
 legend_labels = ['{}: {}'.format(s.variable, s.location) for s in m.traces]
 ax.legend(legend_labels)
