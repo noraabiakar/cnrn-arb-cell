@@ -9,7 +9,7 @@ Specifically:
     - here we set the default values used by NEURON
     - these values would be overriden in the cell model were appropriate
     - celsius, capacitance, resistivity, ion species properties
-  3. `cell.json`: defines parameters and mechanisms of the single cell model:
+  3. `decor.json`: defines parameters and mechanisms of the single cell model:
     - mechanism+paremeter distribution over regions
     - elecrophysiological parametres (capacitance, resistivity, initial voltage (cell-wide defaults and local)
     - ion properties (concentrations, reversal potential, reversal potential calcluation method) (global and local)
@@ -35,5 +35,5 @@ So we suggest that the model description should us the same units as NEURON.
 |   reversal potentials   | mV          |
 |   concentrations (ions) | mM          |
 |   axial resistivity     | Ω·cm        |
-|   membrane capacitance  | μf⋅cm⁻²     |
-|   temperature           | celcius     |
+|   membrane capacitance  | F⋅m⁻²       |
+|   temperature           | kelvin      |

@@ -1,26 +1,30 @@
 {
-    "celsius": 6.3,
-    "cm": 0.01,
-    "Ra": 35.4,
-    "Vm": -60,
-    "ions": {
-        "ca": {
-            "internal-concentration": 5e-5,
-            "external-concentration": 2.0,
-            "reversal-potential": 132.4579341637009,
-            "method": "constant"
-        },
-        "k": {
-            "internal-concentration": 54.4,
-            "external-concentration": 2.5,
-            "reversal-potential": -77,
-            "method": "constant"
-        },
-        "na": {
-            "internal-concentration":  10,
-            "external-concentration": 140,
-            "reversal-potential": 50,
-            "method": "constant"
+    "type": "default-parameters", 
+    "data" : 
+    {
+        "temperature-K": 280,
+        "membrane-capacitance": 0.01,
+        "axial-resistivity": 35.4,
+        "init-membrane-potential": -60,
+        "ions": {
+            "ca": {
+                "init-int-concentration": 5e-5,
+                "init-ext-concentration": 2.0,
+                "init-reversal-potential": 132.4579341637009,
+                "reversal-potential-method": "constant"
+            },
+            "k": {
+                "init-int-concentration": 54.4,
+                "init-ext-concentration": 2.5,
+                "init-reversal-potential": -77,
+                "reversal-potential-method": "constant"
+            },
+            "na": {
+                "init-int-concentration":  10,
+                "init-ext-concentration": 140,
+                "init-reversal-potential": 50,
+                "reversal-potential-method": "constant"
+            }
         }
     }
 }

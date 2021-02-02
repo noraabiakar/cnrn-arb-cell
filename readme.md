@@ -1,10 +1,9 @@
 ## Downloading and Compiling Arbor
 (For help refer to https://arbor.readthedocs.io/en/latest/install.html)
-For the time being arbor needs to be installed from this branch `https://github.com/noraabiakar/arbor/tree/read_json`
 
 ```
 # Clone.
-git clone -b read_json https://github.com/noraabiakar/arbor.git --recurse-submodules
+git clone https://github.com/arbor-sim/arbor.git --recurse-submodules
 cd arbor
 
 # Make a path for building.
