@@ -95,19 +95,19 @@ for region in region_map:
     print(sec, "membrane-capacitance", sec.cm)
     sec.Ra = local_param_dict[region]["axial-resistivity"]
     print(sec, "axial-resistivity", sec.Ra)
-  for ion in local_ion_dict[region]:
-    iconc = ion+"i"
-    econc = ion+"o"
-    revpot = "e"+ion
-    if hasattr(sec, iconc):
-      setattr(sec, iconc, local_ion_dict[region][ion]["iconc"])
-      print(sec, ion, "iconc", getattr(sec, iconc))
-    if hasattr(sec, econc):
-      setattr(sec, econc, local_ion_dict[region][ion]["econc"])
-      print(sec, ion, "econc", getattr(sec, econc))
-    if hasattr(sec, revpot):
-      setattr(sec, revpot, local_ion_dict[region][ion]["revpot"])
-      print(sec, ion, "revpot", getattr(sec, revpot))
+    for ion in local_ion_dict[region]:
+      iconc = ion+"i"
+      econc = ion+"o"
+      revpot = "e"+ion
+      if hasattr(sec, iconc):
+        setattr(sec, iconc, local_ion_dict[region][ion]["iconc"])
+        print(sec, ion, "iconc", getattr(sec, iconc))
+      if hasattr(sec, econc):
+        setattr(sec, econc, local_ion_dict[region][ion]["econc"])
+        print(sec, ion, "econc", getattr(sec, econc))
+      if hasattr(sec, revpot):
+        setattr(sec, revpot, local_ion_dict[region][ion]["revpot"])
+        print(sec, ion, "revpot", getattr(sec, revpot))
   print()
 
 # Set ion methods 
@@ -118,7 +118,7 @@ for ion in method_dict:
   elif method_dict[ion] == "constant":
     h.ion_style(ion_name, 3, 2, 0, 0, 1)
   else: 
-   raise Exception("Only allowed ion methods are \"nernst\" and \"constant\"")
+    raise Exception("Only allowed ion methods are \"nernst\" and \"constant\"")
 
 # Set nseg
 for sec in c.all: 
