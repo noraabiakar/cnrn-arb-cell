@@ -1,16 +1,19 @@
 import arbor
+import json
+import json_to_arb 
+import seaborn
+import pandas
 import sys
-import matplotlib.pyplot as plt
 
-defaults_file = sys.argv[1]
-cells_file    = sys.argv[2]
+with open(sys.argv[1]) as json_file:
+    defaults_json = json.load(json_file) 
+with open(sys.argv[2]) as json_file:
+    decor_json = json.load(json_file) 
 swc_file      = sys.argv[3]
 
-tree         = arbor.load_swc(swc_file)
-defaults     = arbor.load_default_parameters(defaults_file)
-globals      = arbor.load_cell_parameters(cells_file)
-locals       = arbor.load_region_parameters(cells_file)
-region_mechs = arbor.load_region_mechanisms(cells_file)
+morpho   = arbor.load_swc_arbor(swc_file)
+defaults = json_to_arb.load(defaults_json)
+decor    = json_to_arb.load(decor_json)
 
 # Define the regions and locsets in the model.
 defs = {'soma': '(tag 1)',  # soma has tag 1 in swc files.
@@ -23,40 +26,28 @@ defs = {'soma': '(tag 1)',  # soma has tag 1 in swc files.
         } # end of the axon.
 labels = arbor.label_dict(defs)
 
-# Combine morphology with region and locset definitions to make a cable cell.
-cell = arbor.cable_cell(tree, labels)
-
-# Set the default cell parameters.
-cell.set_default_properties(globals)
-
-# Overwrite the default local cell parameters.
-cell.set_local_properties(locals)
-
-# Paint density mechanisms on the regions of the cell.
-cell.paint_dynamics(region_mechs)
 
 # Place current clamp and spike detector.
-cell.place('mid_soma', arbor.iclamp(0, 3, current=3.5))
-cell.place('root', arbor.spike_detector(-10))
+decor.place('"mid_soma"', arbor.iclamp(0, 3, current=3.5))
+decor.place('"root"', arbor.spike_detector(-10))
 
 # Select a fine discritization for apt comparison with neuron.
-cell.compartments_length(0.5)
+decor.discretization(arbor.cv_policy_max_extent(0.5))
+
+# Create cable_cell from morphology, label_dict and decor.
+cell = arbor.cable_cell(morpho, labels, decor)
 
 # Make single cell model.
 m = arbor.single_cell_model(cell)
 
 # Set the model default parameters
-m.set_default_properties(defaults)
-
-cell.output_description("cell_out.json")
-m.output_default_properties("defaults_out.json")
+m.properties = defaults
 
 # Extend the default catalogue
-m.properties.catalogue.extend(arbor.bbp_catalogue(), "")
+m.catalogue.extend(arbor.bbp_catalogue(), "")
 
 # Attach voltage probes that sample at 50 kHz.
-m.probe('voltage', where='root',  frequency=50000)
-m.probe('voltage', where='mid_soma', frequency=50000)
+m.probe('voltage', where='"mid_soma"', frequency=50000)
 
 # Simulate the cell for 20 ms.
 tfinal=20
@@ -71,19 +62,11 @@ else:
     print('no spikes')
 
 # Plot the recorded voltages over time.
-fig, ax = plt.subplots()
+print("Plotting results ...")
+df_list = []
 for t in m.traces:
-    ax.plot(t.time, t.value)
+    df_list.append(pandas.DataFrame({'t/ms': t.time, 'U/mV': t.value, 'Location': str(t.location), "Variable": t.variable}))
 
-legend_labels = ['{}: {}'.format(s.variable, s.location) for s in m.traces]
-ax.legend(legend_labels)
-ax.set(xlabel='time (ms)', ylabel='voltage (mV)', title='swc morphology demo')
-plt.xlim(0,tfinal)
-ax.grid()
+df = pandas.concat(df_list)
 
-plot_to_file=False
-if plot_to_file:
-    fig.savefig("voltages.png", dpi=300)
-else:
-    plt.show()
-
+seaborn.relplot(data=df, kind="line", x="t/ms", y="U/mV",hue="Location",col="Variable",ci=None).savefig('single_cell_arb.svg')

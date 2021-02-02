@@ -6,22 +6,39 @@ import pickle
 import json
 import sys
 import copy
-import json_reader as loader
+import json_to_nrn
+import pandas 
+import seaborn 
 
 h.load_file("stdrun.hoc")
 h.load_file('import3d.hoc')
 
 with open(sys.argv[1]) as json_file:
-    defaults = json.load(json_file)
+  defaults_json = json.load(json_file)
 
 with open(sys.argv[2]) as json_file:
-    cells = json.load(json_file)
+  decor_json = json.load(json_file)
 
-default_file = sys.argv[1]
-cell_file    = sys.argv[2]
+swc = sys.argv[3]
+
+# Check default_json and decor_json for type and data fields
+if "type" not in defaults_json or "type" not in decor_json: 
+  raise Exception("JSON file must contain \"type\" field")
+
+if "data" not in defaults_json or "data" not in decor_json: 
+  raise Exception("JSON file must contain \"data\" field")
+
+if defaults_json["type"] != "default-parameters":
+  raise Exception("field \"type\" expected to be: \"default-parameters\" but is instead:  ", jfile["type"])
+
+if decor_json["type"] != "decor":
+  raise Exception("field \"type\" expected to be: \"decor\" but is instead:  ", jfile["type"])
+
+# Extract data field jsons
+defaults = defaults_json["data"]
+decor = decor_json["data"]
 
 # Class to create cell from swc
-swc = sys.argv[3]
 class cell():
   def __init__(self, fname):
     self.fname = fname
@@ -49,10 +66,10 @@ if (hasattr(c, "axon")):
   region_map["axon"] = c.axon
 
 # load parameters
-local_param_dict = loader.load_param_dict(default_file, cell_file)
-local_ion_dict   = loader.load_ion_dict(default_file, cell_file)
-method_dict      = loader.load_method_dict(default_file, cell_file)
-mechanism_dict   = loader.load_mechanism_dict(cell_file)
+local_param_dict = json_to_nrn.load_param_dict(defaults, decor)
+local_ion_dict   = json_to_nrn.load_ion_dict(defaults, decor)
+method_dict    = json_to_nrn.load_method_dict(defaults, decor)
+mechanism_dict   = json_to_nrn.load_mechanism_dict(decor)
 
 # Paint region mechanisms
 for mech_desc in mechanism_dict: 
@@ -63,8 +80,9 @@ for mech_desc in mechanism_dict:
   translated_params = {}
   for p in params: 
     translated_params[p + "_" + mech] = params[p]
-    
+  
   for sec in region_map[region]:
+    print(mech)
     sec.insert(mech) 
     for p in translated_params: 
       setattr(sec, p, translated_params[p])
@@ -73,23 +91,23 @@ for mech_desc in mechanism_dict:
 region_map.pop("all")
 for region in region_map: 
   for sec in region_map[region]:
-    sec.cm = local_param_dict[region]["cm"]
-    print(sec, "cm", sec.cm)
-    sec.Ra = local_param_dict[region]["Ra"]
-    print(sec, "Ra", sec.Ra)
-    for ion in local_ion_dict[region]:
-      iconc = ion+"i"
-      econc = ion+"o"
-      revpot = "e"+ion
-      if hasattr(sec, iconc):
-        setattr(sec, iconc, local_ion_dict[region][ion]["iconc"])
-        print(sec, ion, "iconc", getattr(sec, iconc))
-      if hasattr(sec, econc):
-        setattr(sec, econc, local_ion_dict[region][ion]["econc"])
-        print(sec, ion, "econc", getattr(sec, econc))
-      if hasattr(sec, revpot):
-        setattr(sec, revpot, local_ion_dict[region][ion]["revpot"])
-        print(sec, ion, "revpot", getattr(sec, revpot))
+    sec.cm = local_param_dict[region]["membrane-capacitance"]
+    print(sec, "membrane-capacitance", sec.cm)
+    sec.Ra = local_param_dict[region]["axial-resistivity"]
+    print(sec, "axial-resistivity", sec.Ra)
+  for ion in local_ion_dict[region]:
+    iconc = ion+"i"
+    econc = ion+"o"
+    revpot = "e"+ion
+    if hasattr(sec, iconc):
+      setattr(sec, iconc, local_ion_dict[region][ion]["iconc"])
+      print(sec, ion, "iconc", getattr(sec, iconc))
+    if hasattr(sec, econc):
+      setattr(sec, econc, local_ion_dict[region][ion]["econc"])
+      print(sec, ion, "econc", getattr(sec, econc))
+    if hasattr(sec, revpot):
+      setattr(sec, revpot, local_ion_dict[region][ion]["revpot"])
+      print(sec, ion, "revpot", getattr(sec, revpot))
   print()
 
 # Set ion methods 
@@ -100,7 +118,7 @@ for ion in method_dict:
   elif method_dict[ion] == "constant":
     h.ion_style(ion_name, 3, 2, 0, 0, 1)
   else: 
-     raise Exception("Only allowed ion methods are \"nernst\" and \"constant\"")
+   raise Exception("Only allowed ion methods are \"nernst\" and \"constant\"")
 
 # Set nseg
 for sec in c.all: 
@@ -109,14 +127,14 @@ for sec in c.all:
   sec.nseg = n
 
 # Set model properties after checking consistency
-global_vm = local_param_dict["all"]["Vm"]
-global_temp = local_param_dict["all"]["celsius"]
+global_vm = local_param_dict["all"]["init-membrane-potential"]
+global_temp = local_param_dict["all"]["temperature-C"]
 
 for region in local_param_dict:
-  if local_param_dict[region]["Vm"] != global_vm: 
-     raise Exception("Neuron doesn't allow inconsistent initial membrane voltage across different regions of a cell")
-  if local_param_dict[region]["celsius"] != global_temp: 
-     raise Exception("Neuron doesn't allow inconsistent temperatures across different regions of a cell")
+  if local_param_dict[region]["init-membrane-potential"] != global_vm: 
+   raise Exception("Neuron doesn't allow inconsistent initial membrane voltage across different regions of a cell")
+  if local_param_dict[region]["temperature-C"] != global_temp: 
+   raise Exception("Neuron doesn't allow inconsistent temperatures across different regions of a cell")
 
 h.v_init = global_vm
 h.celsius = global_vm
@@ -159,17 +177,11 @@ h.run()
 ET = cookie.time()-ST
 print("Finished in %f seconds" % ET)
 
-fig, ax = plt.subplots()
-ax.plot(t, v)
+print("Plotting results ...")
+df_list = []
+df_list.append(pandas.DataFrame({'t/ms': t, 'U/mV': v, 'Location': "(location 0 0.5)", "Variable": "voltage"}))
 
-ax.set(xlabel='time (ms)', ylabel='voltage (mV)', title='swc morphology demo')
-plt.xlim(0,h.tstop)
-# plt.ylim(-80,80)
-ax.grid()
+df = pandas.concat(df_list)
 
-plot_to_file=False
-if plot_to_file:
-    fig.savefig("voltages.png", dpi=300)
-else:
-    plt.show()
+seaborn.relplot(data=df, kind="line", x="t/ms", y="U/mV",hue="Location",col="Variable",ci=None).savefig('single_cell_nrn.svg')
 
